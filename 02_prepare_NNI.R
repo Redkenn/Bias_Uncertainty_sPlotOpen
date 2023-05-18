@@ -1,6 +1,10 @@
- NNI
-
+library(ggplot2)
 library(spatialEco)
+library(viridis)
+library(sf)
+library(rnaturalearth)
+library(raster)
+library(tidyverse)
 
 d <- readRDS("d.rds")
 
@@ -10,6 +14,7 @@ y4 <- d%>%
   group_by(id)%>%
   nest()
 
+# Function for calulating nearest neighbor index per grid
 
 NNI <- function(inputData=NULL){
   
@@ -38,7 +43,7 @@ dfNNI <- dfNNI%>%
 d_id <- d %>% dplyr::select(id) %>% unique()
 
 dfNNI <- cbind(dfNNI, id=d_id)
-dfNNI <- dfNNI[!is.infinite(rowSums(dfNNI)),]
+dfNNI <- dfNNI[!is.infinite(rowSums(dfNNI)),] # inf values removed which represent grid with 1 plot
 d_NNI <- d %>% inner_join(., dfNNI, by="id")
 
 
