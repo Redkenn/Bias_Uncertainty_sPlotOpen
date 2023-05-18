@@ -4,15 +4,17 @@ library(tidyverse)
 library(raster)
 library(rgdal)
 
+## join sPlotOpen datasets
+
 DT2.oa$Species <- gsub(DT2.oa$Species,pattern = ' ',replacement = '_')
 species_level <- DT2.oa[grepl("_", DT2.oa$Species),]
-NOspecies_level <- DT2.oa[!grepl("_", DT2.oa$Species),] #tutte le osservazioni che non possono essere considerate
+NOspecies_level <- DT2.oa[!grepl("_", DT2.oa$Species),] 
 
 
 #d$d.Species <- gsub(d$d.Species,pattern = ' ',replacement = '_')
-
-#Unione delle 2 tabelle necessarie per le analisi e selezione delle variabili
 d <- merge(species_level, header.oa, by='PlotObservationID')
+
+# filtering for Europe, Year >= 1992 and Location uncertainty < 250
 
 d <- d[d$Continent=='Europe',]
 d <- d %>% filter(Location_uncertainty < 250)
@@ -21,6 +23,8 @@ d <- d %>% filter(Year >= 1992)
 
 #length(unique(d$PlotObservationID))
 #[1] 10501
+
+# adding id values of grids with 0.5 degree of spatial resolution
 
 x <- raster()
 e <- extent( -180, 180, -90, 90)
@@ -38,5 +42,5 @@ crs(dCoord)<-  "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 OV<- over(dCoord, r.sp)
 colnames(OV) <- "id"
 d<- cbind(OV, d)
-write_rds(d,"E:/Dottorato2/sPlot/d.rds")
+
 
