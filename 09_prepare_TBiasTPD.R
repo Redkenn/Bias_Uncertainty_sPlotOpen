@@ -1,8 +1,23 @@
 require(TPD)
 require(tidyverse)
-dd <- readRDS('dYear.rds')
+library(vegan)
+library(viridis)
+library(ggplot2)
+library(rnaturalearth)
+library(sf)
 
-dd %>% dplyr::select(-PlotObservationID)%>%
+d <- readRDS("d.rds")
+
+d$Year <- as.numeric(d$Year)
+
+dd <- d %>% dplyr::select(id, PlotObservationID, Year) %>% 
+        group_by(id, Year) %>%
+        mutate(nPlotY = n(PlotObservationID)) %>%
+        ungroup()
+
+# create wide temporal data.frame
+
+dd %>% dplyr::select(-PlotObservationID)%>%  
   unique%>%
   mutate(Year=as.numeric(Year)) %>% 
   pivot_wider(names_from = Year,values_from = nPlotY) %>% 
@@ -15,8 +30,6 @@ ddWide[is.na(ddWide)] <- 0
 
 
 # calcluate Pielou's evenness
-
-library(vegan)
 
 df <- data.frame(S=rowSums(ddWide[,2:24]),
                  H=diversity(ddWide[,2:24]))
@@ -34,17 +47,18 @@ r <- disaggregate(r, fact=2)
 vals <- 1:ncell(r)
 r <- setValues(r, vals)
 
+# data.frame with pixels id and coordinates
 df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
 
-df <- df %>% inner_join(., df.r, by="id")
+df <- df %>% inner_join(., df.r, by="id") # join pixels coordinates
 
 coordinates(df)= ~x+y
 
 rst <- raster(ext = extent(c(-180, 180, -90, 90)), crs = crs(r), res = 0.5)
 dfr <- rasterize(df, rst)
 
-
+## spatial polygons of world's countries
 world <- ne_countries(scale = "medium", returnclass = "sf")
 
 df_sp <- as(dfr,'SpatialPolygonsDataFrame')
