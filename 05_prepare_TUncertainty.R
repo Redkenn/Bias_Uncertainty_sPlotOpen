@@ -8,7 +8,12 @@ library(rnaturalearth)
 d <- readRDS("d.rds")
 
 d$Year <- as.numeric(d$Year)
+
+# difference in years from the most recent plot observation
+
 d$YearDif <- 2014-d$Year
+
+# Esponential decay of temporal information
 
 TU1 <- function(x){
   y <- exp(-1*x)
@@ -31,7 +36,7 @@ TU1_25 <- function(x){
 
 d$TU25 <- TU1_25(d$YearDif)
 
-############ mutilines #######
+############ mutilines plot #######
 
 p <- ggplot() +
   geom_line(data = d, aes(x = YearDif, y = TU25), color = "blue") +
@@ -57,7 +62,7 @@ df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
 
 
-############# n Plot grid ############
+############# n Plot x grid: samplig effort ############
 
 nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
  mutate(nPlot = n()) %>%
