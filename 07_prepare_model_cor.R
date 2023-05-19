@@ -4,6 +4,8 @@ library(tidyverse)
 library(raster)
 library(rgdal)
 library(mgcv)
+library(SpatialPack)
+
 
 d_NNI <- readRDS("d_NNI.rds")
 
@@ -146,7 +148,6 @@ ggsave(plot = p1,
 
 ### from line 129 means pearson correlation
 
-library(SpatialPack)
 
 NAT_DIS_NNI_POP_COMP <- cbind(NAT_DIS_NNI_POP, comp =Vcompr, id=cells)
 NAT_DIS_NNI_POP_COMP <- NAT_DIS_NNI_POP_COMP %>% drop_na() 
