@@ -6,6 +6,7 @@ library(rgdal)
 
 d <- readRDS("d.rds")
 
+# Over for plots as spatial points and Areas 2000 as spatial polygons
 
 y3 <- d %>% dplyr::select(Longitude, Latitude, PlotObservationID)%>%unique()
 coordinates(y3)= ~Longitude+Latitude
@@ -39,6 +40,8 @@ r
 
 df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
+
+### select only plots inside Area 2000
 
 DFinS <- df.ov_plotNat %>% filter(In_Out %in% 1) %>% group_by(id)  %>%
   mutate(countIN= sum(In_Out)) %>%
@@ -81,11 +84,11 @@ geom_sf(aes(fill =log(countIN)))+
         legend.key.size = unit(0.8, 'cm'))   ->plot
 
 write_rds(plot, "nPlotr_sp.rds")
-######## sarebbe figo farlo per country!!! #########
 
 
 
-#################### stessi passaggi ma per out ##################
+
+#################### stessi passaggi ma per out: from now it is not part of the paper ##################
 
 d2 <- read.csv("d2.csv")
 
