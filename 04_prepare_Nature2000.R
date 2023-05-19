@@ -3,6 +3,8 @@ library(rnaturalearth)
 library(tidyverse)
 library(raster)
 library(rgdal)
+library(ggplot2)
+library(viridis)
 
 d <- readRDS("d.rds")
 
