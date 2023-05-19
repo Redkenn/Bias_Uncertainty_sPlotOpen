@@ -1,11 +1,16 @@
 library(tidyverse)
 library(KnowBR)
-
+library(raster)
+library(ggplot2)
+library(viridis)
+library(rnaturalearth)
 
 #### Completeness per grids with incidence data
 
 d <- readRDS("d.rds")
-d$Species <- gsub(d$Species,pattern = '_',replacement = ' ')
+#d$Species <- gsub(d$Species,pattern = '_',replacement = ' ')
+
+# adding incidence value for each record
 
 d$records <- 1
 
@@ -14,14 +19,17 @@ d3 <- d %>%
   dplyr::select(Species, PlotObservationID, records)%>%
   pivot_wider(names_from =Species, values_from = records, id_cols=PlotObservationID, values_fn = list(records = sum), values_fill = 0)%>%
   mutate(across(where(is.numeric), round, 0)) %>% unique()
+  
 #length(unique(d$PlotObservationID))
 #[1] 10501
 #length(unique(d$Species))
 #[1] 5441
 
+# select coordinates for each plot
+
 y1 <- d %>% dplyr::select(PlotObservationID, Longitude,  Latitude) %>% unique()
 
-# table for KnowBR format B
+# create table format B for KnowBR format B
 d3 <- merge(d3, y1, by="PlotObservationID") 
 
 
@@ -31,7 +39,7 @@ d3 <- d3 %>% relocate(c( Longitude, Latitude), .before = "Aegopodium podagraria"
 data(adworld)                    
 KnowB(data=d3, save="CSV", format="B", cell=30) # 0.5 degree
 
-#########
+######### Estimator is the table that contains the completeness values
 
 est <- read.csv("Estimators.CSV", header=T, sep=";")
 est$Latitude <- gsub(est$Latitude,pattern = ',',replacement = '.')
