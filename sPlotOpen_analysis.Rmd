@@ -1,0 +1,59 @@
+---
+title: "sPlotOpen_analysis"
+author: "Elisa Marchetto and Martina Livornese"
+date: "2023-05-19"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+## Spatial Bias
+
+We calculated the spatial bias per grid in Europe as inventory completeness and Nearest Neighbor Index which is a proxy of the plots distribution.
+
+### Sampling effort
+
+<center>![Number of plots per grid](E:/Dottorato2/sPlot/nPlotr.jpg){height="300px"}</center>
+
+### Completeness
+
+<center>![Inventory completeness](E:/Dottorato2/sPlot/compr.jpg){height="300px"}</center>
+
+### Nearest Neighbor Index
+
+<center>![Nearest Neighbor Index](E:/Dottorato2/sPlot/NNIr.jpg){height="300px"}</center>
+
+### Tjostheim's Coefficient
+
+We calculated the pairwise correlation of completeness and NNI vs population density, road density, number of plots in Nature 2000 using Tjostheim's Coefficient. The implemented technique is a nonparametric coefficient that summarizes the association between two spatial variables.
+
+```{r}
+knitr::opts_chunk$set(echo = FALSE)
+
+Names <- c("Comp_Dist", "Comp_Nat", "Comp_Pop", "Comp_Rough", "NNI_Dist", "NNI_Nat", "NNI_Pop", "NNI_Rough")
+Cor <- c(0.0155, 0.0500, 0.0358, -0.0082, -0.0259, -0.0316, -0.0216, -0.0156)
+df <- data.frame(cbind(Names, Cor))
+df
+```
+
+## Temporal Bias
+
+We calculated the temporal bias as Pielou's evenness. J's Index is computed per grid considering the year of each plot observation.
+
+<center>![Pielou\'s evenness](E:/Dottorato2/sPlot/Pielou.jpg){height="300px"}</center>
+
+<center>![Temporal bias (J) per country](E:/Dottorato2/sPlot/TB_even_box.jpg){height="300px"}</center>
+
+## Temporal uncertainty
+
+We calculated the exponential decay of plot information assiging 3 exponetial values (z=-1, z=-1/5, z=-1/25). Besides, the temporal precision per grid was computed as median and weighted mean of the plots' values resulting from the exponential curve.
+
+<center>![Curves of exponential decay of plots information](E:/Dottorato2/sPlot/curveTU_F.jpg){height="300px"}</center>
+
+<center>![Temporal precision calculated as median value](E:/Dottorato2/sPlot/medianTU.jpg){height="300px"}</center>
+
+<center>![Temporal precision calculated as weighted mean value](E:/Dottorato2/sPlot/wmTU.jpg){height="300px"}</center>
+
+### Bivariate map: spatial bias vs temporal bias
+
+<center>![Bivariate map](E:/Dottorato2/sPlot/bivariateF.jpg){height="300px"}</center>
