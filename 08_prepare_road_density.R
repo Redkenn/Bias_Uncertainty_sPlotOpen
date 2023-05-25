@@ -30,7 +30,7 @@ Europe.owin <- as(Europe.utm, "owin")
 
 ppp.europe <- ppp[Europe.owin] #retain points that are inside the mask
 
-kde <- density(ppp.europe, sigma= bw.diggle, kernel= "gaussian", positive= T) #compute density with smoothing kernel choosen by the bw.diggle method
+kde <- density(ppp.europe, sigma= bw.scott, kernel= "gaussian", positive= T) #compute density with smoothing kernel choosen by the bw.diggle method
 
 #from im object to raster
 gridded.kde <- as.SpatialGridDataFrame.im(kde) 
