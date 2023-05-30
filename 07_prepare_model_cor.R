@@ -43,7 +43,7 @@ pop05 <- readRDS("pop05.rds")
 
 ######## select and clean for GAM with NNI ########
 
-NAT <- nNat2@data %>% dplyr::select(id, countIN) %>% unique()
+nNat2 <- nNat2@data %>% inner_join(., nPlot, by="id") %>% mutate(rIN = countIN/nPlot) %>% dplyr::select(id, rIN) %>% unique()
 DIS <- median_dist %>% dplyr::select(id, median_dist) %>% unique()
 NNI <- d_NNI %>% dplyr::select(id, NNI) %>% unique()
 
