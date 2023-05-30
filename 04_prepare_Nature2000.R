@@ -3,12 +3,9 @@ library(rnaturalearth)
 library(tidyverse)
 library(raster)
 library(rgdal)
-library(ggplot2)
-library(viridis)
 
 d <- readRDS("d.rds")
 
-# Over for plots as spatial points and Areas 2000 as spatial polygons
 
 y3 <- d %>% dplyr::select(Longitude, Latitude, PlotObservationID)%>%unique()
 coordinates(y3)= ~Longitude+Latitude
@@ -43,21 +40,25 @@ r
 df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
 
-### select only plots inside Area 2000
-
 DFinS <- df.ov_plotNat %>% filter(In_Out %in% 1) %>% group_by(id)  %>%
   mutate(countIN= sum(In_Out)) %>%
   ungroup() 
 
 nNat2 <- DFinS %>% inner_join(., df.r, by="id") 
 
+nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
+  mutate(nPlot = n()) %>%
+  ungroup() %>% dplyr::select(id, nPlot)
+
+nNat2 <- nNat2@data %>% inner_join(., nPlot, by="id") %>% mutate(rIN = countIN/nPlot) %>% dplyr::select(id, rIN) %>% unique()
+
+nNat2 <- nNat2 %>% inner_join(., df.r, by="id")
+
 coordinates(nNat2)= ~x+y
 
 rst <- raster(ext = extent(c(-180, 180, -90, 90)), crs = crs(r), res = 0.5)
 nNat2r <- rasterize(nNat2, rst)
 
-
-plot(nNat2)
 spNat <- as(nNat2r,"SpatialPolygonsDataFrame")
 world <- ne_coastline(scale = "medium", returnclass = "sf")
 
