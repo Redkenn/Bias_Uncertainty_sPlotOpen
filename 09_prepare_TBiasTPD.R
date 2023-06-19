@@ -5,14 +5,15 @@ library(viridis)
 library(ggplot2)
 library(rnaturalearth)
 library(sf)
+library(raster)
 
 d <- readRDS("d.rds")
 
 d$Year <- as.numeric(d$Year)
 
-dd <- d %>% dplyr::select(id, PlotObservationID, Year) %>% 
+dd <- d %>% dplyr::select(id, PlotObservationID, Year) %>% unique() %>%
         group_by(id, Year) %>%
-        mutate(nPlotY = n(PlotObservationID)) %>%
+        mutate(nPlotY = n()) %>%
         ungroup()
 
 # create wide temporal data.frame
