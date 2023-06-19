@@ -87,8 +87,59 @@ df_sp %>%
         legend.text = element_text(size=12,angle = 0), 
         legend.key.size = unit(0.8, 'cm'))   ->plot
 
+
 ggsave(plot = plot,
        filename = "Pielou.jpg",
        width = 10,
        height = 10,
+       dpi = 600)
+
+
+############# Boxplot countries ############
+df <- data.frame(S=rowSums(ddWide[,2:24]),
+                 H=diversity(ddWide[,2:24]))
+df$J <- df$H/log(df$S)
+df$id <- ddWide$id 
+df <- df %>% drop_na()
+
+df <- df %>% inner_join(., df.r, by="id")
+
+coordinates(df)= ~x+y
+
+Europe <- ne_countries(scale="medium", type="map_units", returnclass="sf", continent="Europe")
+Europe <- as(Europe, "Spatial")
+
+crs(Europe) <- crs(df)
+ov <- sp::over(df, Europe)
+
+df_EU <-  df %>% cbind(ov)
+
+df_EU <- df_EU@data %>% dplyr::select(id, J, name_long) %>% drop_na()
+
+df_nID <- df_EU %>%  dplyr::select(id, name_long) %>%  group_by(name_long) %>%
+  mutate(nID = n()) %>%
+  ungroup() %>% 
+  filter(nID >= 17) %>%
+  filter(!name_long=="Norway")
+
+
+dfF <- df_nID %>% 
+  inner_join(., df_EU, by="id")
+dfF <- dfF[,-5]
+
+p <- dfF %>% 
+  ggplot()+
+  geom_boxplot(aes(x=name_long.x,y=J, fill=J))+
+  labs(y='Temporal evenness', x="Country")+
+  theme_classic()+
+  theme(axis.title.x = element_text(size = 15),
+        axis.text.x = element_text(size = 13),
+        axis.title.y = element_text(size = 15),
+        axis.text.y = element_text(size = 13),
+        plot.title.position ='plot')
+
+ggsave(plot = p,
+       filename = "TB_even_box.jpg",
+       width = 18,
+       height = 7,
        dpi = 600)
