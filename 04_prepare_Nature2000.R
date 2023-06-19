@@ -3,6 +3,8 @@ library(rnaturalearth)
 library(tidyverse)
 library(raster)
 library(rgdal)
+library(ggplot2)
+library(viridis)
 
 d <- readRDS("d.rds")
 
@@ -65,7 +67,7 @@ world <- ne_coastline(scale = "medium", returnclass = "sf")
 spNat  %>% 
   st_as_sf () %>%  
   ggplot()+
-geom_sf(aes(fill =log(countIN)))+
+geom_sf(aes(fill =rIN))+
   geom_sf(data=world,
           colour = "black", fill = "transparent")+
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
@@ -85,38 +87,6 @@ geom_sf(aes(fill =log(countIN)))+
         strip.text = element_text(size=12),
         legend.text = element_text(size=12,angle = 0), 
         legend.key.size = unit(0.8, 'cm'))   ->plot
-
-write_rds(plot, "nPlotr_sp.rds")
-
-
-
-
-#################### stessi passaggi ma per out: from now it is not part of the paper ##################
-
-d2 <- read.csv("d2.csv")
-
-d2$Year <- substr(d2$d.Date_of_recording, 1,4)
-d2 <- d2 %>% filter(Year <= 1992)
-y3 <- d2 %>% dplyr::select(d.Longitude, d.Latitude, d.PlotObservationID)%>%unique()
-coordinates(y3)= ~d.Longitude+d.Latitude
-crs(y3) <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
-Nat.sp <- readOGR("/media/data/r_projects/sampling_bias/sPlot/Natura2000", "Natura2000_end2021_epsg3035")
-point <- as(y3, "sf")
-Nat2000 <- as(Nat.sp, "sf")
-Nat2000<- st_transform(Nat2000, crs = st_crs(point))
-
-point.sp <- as(point,"Spatial")
-Nat2000.sp <- as(Nat2000,"Spatial")
-ov <- sp::over(point.sp, Nat2000.sp)
-
-y3 <- d2 %>% dplyr::select(d.Longitude, d.Latitude, d.PlotObservationID)%>%unique()
-ov$d.PlotObservationID<- y3[, 3]
-ov$In_Out <- ifelse(is.na(ov$SITECODE), 0, 1)
-
-df.ov_plotNat<- cbind(ov[,7:8], y3[,1:2])
-
-DFin <- df.ov_plotNat %>% filter(In_Out %in% 1)   #41.67% quelli che poi sono entrati in Nat2000
-DFout <- df.ov_plotNat %>% filter(In_Out %in% 0)  #58.33%
 
 
 ########## barplot per date
