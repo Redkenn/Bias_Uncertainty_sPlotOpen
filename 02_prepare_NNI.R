@@ -66,7 +66,7 @@ d_NNIs <- d_NNIs %>% inner_join(., df.r, by="id") %>% unique()
 coordinates(d_NNIs)= ~x + y 
 
 rst <- raster(ext = extent(c(-180, 180, -90, 90)), crs = crs(r), res = 0.5)
-NNIr <- rasterize(d_NNIs, rst) # perchè fun = last
+NNIr <- rasterize(d_NNIs, rst) 
 
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
