@@ -5,10 +5,13 @@ library(raster)
 library(rgdal)
 library(SpatialPack)
 
-
+d <- readRDS("d.rds")
 d_NNI <- readRDS("d_NNI.rds")
 
 nNat2 <- readRDS("nNat2.rds")
+nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
+  mutate(nPlot = n()) %>%
+  ungroup() %>% dplyr::select(id, nPlot)
 
 
 x <- raster()
@@ -46,7 +49,7 @@ nNat2 <- nNat2@data %>% inner_join(., nPlot, by="id") %>% mutate(rIN = countIN/n
 DIS <- median_dist %>% dplyr::select(id, median_dist) %>% unique()
 NNI <- d_NNI %>% dplyr::select(id, NNI) %>% unique()
 
-NAT_DIS <- DIS %>% inner_join(., NAT, by="id")
+NAT_DIS <- DIS %>% inner_join(., nNat2, by="id")
 NAT_DIS_NNI <- NAT_DIS %>% inner_join(., NNI, by="id")
 
 
@@ -56,6 +59,7 @@ coordinates(ctr)= ~x+y
 crs(ctr)=crs(pop05)
 
 Vpop05 <- extract(pop05, ctr)
+Vcompr <- extract(compr, ctr)
 
 NAT_DIS_NNI_POP <- cbind(NAT_DIS_NNI, pop=Vpop05)%>% relocate("NNI", .before = "median_dist")
 NAT_DIS_NNI_POP <- NAT_DIS_NNI_POP[,-1]
