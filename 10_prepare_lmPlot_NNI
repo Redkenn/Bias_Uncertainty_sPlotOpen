@@ -3,6 +3,8 @@ library(spatialEco)
 library(viridis)
 library(tidyverse)
 
+d <- readRDS("d.rds")
+
 ## Number of plots ##
 
 nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
