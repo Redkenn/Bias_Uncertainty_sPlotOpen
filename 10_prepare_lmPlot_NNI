@@ -1,3 +1,8 @@
+library(ggplot2)
+library(spatialEco)
+library(viridis)
+library(tidyverse)
+
 ## Number of plots ##
 
 nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
@@ -6,7 +11,7 @@ nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) 
 
 
 
-nPlot <- nPlot %>% inner_join(., df.r, by="id")
+nPlot <- nPlot %>% inner_join(., df.r, by="id") %>% dplyr::select(id, nPlot)
 
 ## NNI ##
 
@@ -46,5 +51,6 @@ d_id <- d %>% dplyr::select(id) %>% unique()
 
 dfNNI <- cbind(dfNNI, id=d_id)
 dfNNI <- dfNNI[!is.infinite(rowSums(dfNNI)),] # inf values removed which represent grid with 1 plot
-d_NNI <- d %>% inner_join(., dfNNI, by="id")
+d_NNI <- d %>% inner_join(., dfNNI, by="id") %>% dplyr::select(id, NNI)
 
+NNI_nPlot <- d_NNI %>% inner_join(., nPlot, by="id") %>% unique()
