@@ -2,8 +2,20 @@ library(ggplot2)
 library(spatialEco)
 library(viridis)
 library(tidyverse)
+library(raster)
+library(sf)
 
 d <- readRDS("d.rds")
+
+x <- raster()
+e <- extent( -180, 180, -90, 90) 
+r<-raster::crop(x, e)
+r <- disaggregate(r, fact=2)
+vals <- 1:ncell(r)
+r <- setValues(r, vals)
+
+df.r <- as.data.frame(r, xy=TRUE)
+colnames(df.r)<- c("x","y","id")
 
 ## Number of plots ##
 
@@ -13,7 +25,7 @@ nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) 
 
 
 
-nPlot <- nPlot %>% inner_join(., df.r, by="id") %>% dplyr::select(id, nPlot)
+nPlot <- nPlot %>% inner_join(., df.r, by="id") %>% dplyr::select(id, nPlot) %>% unique()
 
 ## NNI ##
 
@@ -53,6 +65,14 @@ d_id <- d %>% dplyr::select(id) %>% unique()
 
 dfNNI <- cbind(dfNNI, id=d_id)
 dfNNI <- dfNNI[!is.infinite(rowSums(dfNNI)),] # inf values removed which represent grid with 1 plot
-d_NNI <- d %>% inner_join(., dfNNI, by="id") %>% dplyr::select(id, NNI)
+d_NNI <- d %>% inner_join(., dfNNI, by="id") %>% dplyr::select(id, NNI)  %>% unique()
 
-NNI_nPlot <- d_NNI %>% inner_join(., nPlot, by="id") %>% unique()
+NNI_nPlot <- d_NNI %>% inner_join(., nPlot, by="id") 
+
+scatter_plot <- ggplot(NNI_nPlot, aes(x = nPlot, y = NNI)) +
+  geom_point() +
+  labs(x = "Number of plots", y = "NNI") +
+  theme_minimal()
+
+linear_regression <- scatter_plot + geom_smooth(method = "lm", se = FALSE)
+
