@@ -84,7 +84,7 @@ nPlotr_sp <- as(nPlotr,'SpatialPolygonsDataFrame')
 nPlotr_sp %>% 
   st_as_sf () %>%  
   ggplot()+
-  geom_sf(aes(fill =log(nPlot)))+
+  geom_sf(aes(fill =log10(nPlot)))+
   geom_sf(data=world,
           colour = "black", fill = "transparent")+
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
