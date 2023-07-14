@@ -1,0 +1,38 @@
+y4 <- d%>% 
+  dplyr::select(Longitude, Latitude, id)%>%
+  unique()%>%
+  group_by(id)%>%
+  nest()
+
+# Function for calulating nearest neighbor index per grid
+
+NNI <- function(inputData=NULL){
+  
+  coordinates(inputData) = ~ Longitude+Latitude 
+  inputData <- inputData %>% st_as_sf()
+  nni <- nni(inputData, win="extent")
+  
+  
+  return(nni)
+}
+
+map(y4$data, ~ NNI(.x))
+y5 <- .Last.value
+
+
+NNI <- unlist(map(y5[1:1122], "NNI"))
+
+dfNNI <- NNI %>%
+  as.data.frame()
+#rownames_to_column(var="id")
+colnames(dfNNI) <- "NNI"
+dfNNI <- dfNNI%>%
+  mutate(range=cut(NNI, c(0,1,Inf), include.lowest=TRUE, labels=FALSE))
+
+
+d_id <- d %>% dplyr::select(id) %>% unique()
+
+dfNNI <- cbind(dfNNI, id=d_id)
+dfNNI <- dfNNI[!is.infinite(rowSums(dfNNI)),] # inf values removed which represent grid with 1 plot
+d_NNI <- d %>% inner_join(., dfNNI, by="id")
+
