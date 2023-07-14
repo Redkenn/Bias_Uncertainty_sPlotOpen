@@ -1,3 +1,15 @@
+## Number of plots ##
+
+nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
+ mutate(nPlot = n()) %>%
+  ungroup()
+
+
+
+nPlot <- nPlot %>% inner_join(., df.r, by="id")
+
+## NNI ##
+
 y4 <- d%>% 
   dplyr::select(Longitude, Latitude, id)%>%
   unique()%>%
