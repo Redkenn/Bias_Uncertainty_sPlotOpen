@@ -89,7 +89,7 @@ nPlotr_sp %>%
           colour = "black", fill = "transparent")+
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
   coord_sf(xlim = c(-20, 51), ylim = c(30, 71), expand = TRUE)+
-  labs(title = "Number of plots", x="Longitude", y="Latitude", fill = "ln nPlots") +theme_light()+
+  labs(title = "Number of plots", x="Longitude", y="Latitude", fill = "log10 Plots") +theme_light()+
   theme(legend.background=element_blank(),
         panel.grid = element_blank(),
         legend.position = 'bottom',
