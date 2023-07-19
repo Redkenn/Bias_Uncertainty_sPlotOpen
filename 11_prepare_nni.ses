@@ -182,19 +182,20 @@ r<-raster::crop(x, e)
 r <- disaggregate(r, fact=2)
 vals <- 1:ncell(r)
 r <- setValues(r, vals)
+df.r <- as.data.frame(r, xy=TRUE)
+colnames(df.r)<- c("x","y","id")
 
-SP.win <- as(r, "SpatialPolygons")
-W <- as(SP.win, "owin")
 
 d <- readRDS("d.rds")
 
 y4 <- d%>% 
   dplyr::select(Longitude, Latitude, id)%>%
   unique()%>% 
-  cbind(W) %>%
+   inner_join(., df.r, by="id") %>% unique() %>%
   group_by(id)%>%
   nest()
 
+map(y4$data, ~ ppp(.x$Longitude, .x$Latitude, window = owin(c(.x$x, .x$y), radius = 0.5))) #### fa fatto una sorta di loop
 
 NNI <- function(inputData=NULL){
   
