@@ -189,13 +189,42 @@ colnames(df.r)<- c("x","y","id")
 d <- readRDS("d.rds")
 
 y4 <- d%>% 
+      dplyr::select(Longitude, Latitude, id)%>%unique()
+coordinates(y4) <- ~ Longitude + Latitude
+
+rP <- rasterToPolygons(r)
+crs(y4)<- crs(rP)
+sp <- over(rP, y4)
+rp <- st_as_sf(rP)
+prova <- cbind(rp, sp)%>%drop_na()%>%dplyr::select(id, geometry)
+bbox_list <- lapply(prova$geometry, st_bbox) 
+ # Convert the list of bboxes to a data frame
+bbox_df <- data.frame(do.call(rbind, bbox_list)) %>% cbind(id=prova$id)
+
+y4 <- d%>% 
   dplyr::select(Longitude, Latitude, id)%>%
   unique()%>% 
-   inner_join(., df.r, by="id") %>% unique() %>%
   group_by(id)%>%
   nest()
 
-map(y4$data, ~ ppp(.x$Longitude, .x$Latitude, window = owin(c(.x$x, .x$y), radius = 0.5))) #### fa fatto una sorta di loop
+bbox_id <- d%>% 
+  dplyr::select(Longitude, Latitude, id)%>%
+  unique()%>% 
+  inner_join(., bbox_df, by="id") %>% unique()%>%
+  dplyr::select(xmin,xmax,ymin,ymax)
+
+y5 <- list()
+
+# Step 4: Iterate through each 'id' and create the ppp object using the corresponding bounding box
+for (i in 1:nrow(bbox_id)) {
+  ppp_obj <- map(y4$data, ~ ppp(.x$Longitude, .x$Latitude, window = owin(c(bbox_id[i, "xmin"], bbox_id[i, "xmax"]), c(bbox_id[i, "ymin"], bbox_id[i, "ymax"]))))
+  y5[[i]] <- ppp_obj
+}
+
+##################################à######
+
+
+
 
 NNI <- function(inputData=NULL){
   
