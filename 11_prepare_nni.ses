@@ -52,6 +52,7 @@ clarkevans.test2 <- function (X, ..., correction = "none",
   miss.nsim <- missing(nsim)
   verifyclass(X, "ppp")
   W <- Window(X)
+  areaW <- area.default(W)
   nX <- npoints(X)
   correction <- pickoption("correction", correction, c(none = "none", 
                                                        Donnelly = "Donnelly", donnelly = "Donnelly", guard = "guard", 
@@ -113,7 +114,7 @@ clarkevansCalc <- function(X, correction="none", clipregion=NULL,
                            working=FALSE) {
   # calculations for Clark-Evans index or test
   W <- Window(X)
-  areaW <- area(W)
+  areaW <- area.default(W)
   npts <- npoints(X)
   intensity <- npts/areaW
   # R undefined for empty point pattern
@@ -223,8 +224,28 @@ for (i in 1:nrow(bbox_id)) {
 
 ##################################à######
 
+y4 <- d%>% 
+  dplyr::select(Longitude, Latitude, id)%>% filter(id<20000)
+  unique()%>% 
+  group_by(id)%>%
+  nest()
+
+bbox_id <- d%>% 
+  dplyr::select(Longitude, Latitude, id)%>% filter(id<20000)%>%
+  unique()%>% 
+  inner_join(., bbox_df, by="id") %>% 
+  dplyr::select(xmin,xmax,ymin,ymax)%>% unique()
 
 
+y5 <- list()
+for (i in 1:9) {
+  ppp_obj <- ppp(y4$data[[i]]$Longitude, y4$data[[i]]$Latitude, window = owin(c(bbox_id[i, "xmin"], bbox_id[i, "xmax"]), c(bbox_id[i, "ymin"], bbox_id[i, "ymax"])))
+  y5[[i]] <- ppp_obj
+}
+
+#########################################
+
+test <- map(y5, ~ clarkevans.test2(.x, correction="cdf"))
 
 NNI <- function(inputData=NULL){
   
