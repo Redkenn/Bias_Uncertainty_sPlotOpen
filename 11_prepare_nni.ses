@@ -247,6 +247,6 @@ for (i in 1:9) {
 }
 
 map(y5, ~ clarkevans.test2(.x, correction="cdf")$statistic.SES)
-test <- .LastValue
+test <- .Last.value
 #########################################
 
