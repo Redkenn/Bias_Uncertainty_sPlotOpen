@@ -1,6 +1,9 @@
 library(tidyverse)
 library(spatstat)
 library(raster)
+library(sf)
+
+
 ##### spatstat functions #####
 clarkevans <- function(X, correction=c("none", "Donnelly", "cdf"),
                        clipregion=NULL)
@@ -52,7 +55,7 @@ clarkevans.test2 <- function (X, ..., correction = "none",
   miss.nsim <- missing(nsim)
   verifyclass(X, "ppp")
   W <- Window(X)
-  areaW <- area.default(W)
+  areaW <- area.default(W) ##### area of W calculated as axb of owin type "rectangle"
   nX <- npoints(X)
   correction <- pickoption("correction", correction, c(none = "none", 
                                                        Donnelly = "Donnelly", donnelly = "Donnelly", guard = "guard", 
@@ -101,7 +104,7 @@ clarkevans.test2 <- function (X, ..., correction = "none",
   }
   statistic <- as.numeric(statistic)
   names(statistic) <- "R"
-  statistic.SES <- (statistic - mean(sims))/sd(sims)
+  statistic.SES <- (statistic - mean(sims, na.rm=TRUE))/sd(sims, na.rm=TRUE) ## na.rm=TRUE to avoid NaN of sims
   out <- list(statistic = statistic, p.value = p.value, alternative = altblurb, 
               method = c("Clark-Evans test", corrblurb, pvblurb), data.name = Xname,  
               sims=sims, 
@@ -243,18 +246,7 @@ for (i in 1:9) {
   y5[[i]] <- ppp_obj
 }
 
+map(y5, ~ clarkevans.test2(.x, correction="cdf")$statistic.SES)
+test <- .LastValue
 #########################################
 
-test <- map(y5, ~ clarkevans.test2(.x, correction="cdf"))
-
-NNI <- function(inputData=NULL){
-  
-  nni <- clarkevans.test2(nputData, correction="cdf")$statistic.SES
-  
-  
-  return(nni)
-}
-
-
-map(y4$data, ~ NNI(.x))
-y5 <- .Last.value
