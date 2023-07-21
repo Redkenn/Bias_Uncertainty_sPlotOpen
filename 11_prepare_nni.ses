@@ -194,6 +194,8 @@ d <- readRDS("d.rds")
 
 y4 <- d%>% 
       dplyr::select(Longitude, Latitude, id)%>%unique()
+
+id <- y4 %>% dplyr::select(id) 
 coordinates(y4) <- ~ Longitude + Latitude
 
 rP <- rasterToPolygons(r)
@@ -208,14 +210,14 @@ bbox_df <- data.frame(do.call(rbind, bbox_list)) %>% cbind(id=prova$id)
 y4 <- d%>% 
   dplyr::select(Longitude, Latitude, id)%>%
   unique()%>% 
-  group_by(id)%>%
+  group_by(id)%>% ### forse qui dovrei mantenere un xmin così da avere 1125 ...boooo
   nest()
 
 bbox_id <- d%>% 
-  dplyr::select(Longitude, Latitude, id)%>%
+  dplyr::select(id)%>%
   unique()%>% 
-  inner_join(., bbox_df, by="id") %>% unique()%>%
-  dplyr::select(xmin,xmax,ymin,ymax)
+  inner_join(., bbox_df, by="id") %>%
+  dplyr::select(xmin,xmax,ymin,ymax) %>% unique()
 
 y5 <- list()
 
