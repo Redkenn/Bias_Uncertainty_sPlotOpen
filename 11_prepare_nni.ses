@@ -207,30 +207,44 @@ bbox_list <- lapply(prova$geometry, st_bbox)
  # Convert the list of bboxes to a data frame
 bbox_df <- data.frame(do.call(rbind, bbox_list)) %>% cbind(id=prova$id)
 
+bbox_id <- d%>% 
+  dplyr::select(id)%>%
+  unique()%>% 
+  inner_join(., bbox_df, by="id") %>%
+  group_by(id) %>%
+  filter(n() == 1) %>%
+  ungroup()
+
 y4 <- d%>% 
   dplyr::select(Longitude, Latitude, id)%>%
   unique()%>% 
-  group_by(id)%>% ### forse qui dovrei mantenere un xmin così da avere 1125 ...boooo
+  inner_join(., bbox_id, by="id")%>%
+  dplyr::select(Longitude, Latitude, id)%>%
+  group_by(id)%>% 
   nest()
 
 bbox_id <- d%>% 
   dplyr::select(id)%>%
   unique()%>% 
   inner_join(., bbox_df, by="id") %>%
-  dplyr::select(xmin,xmax,ymin,ymax) %>% unique()
+  group_by(id) %>%
+  filter(n() == 1) %>%
+  ungroup()%>%
+  dplyr::select(xmin,xmax,ymin,ymax) 
 
 y5 <- list()
-
-# Step 4: Iterate through each 'id' and create the ppp object using the corresponding bounding box
-for (i in 1:nrow(bbox_id)) {
-  ppp_obj <- map(y4$data, ~ ppp(.x$Longitude, .x$Latitude, window = owin(c(bbox_id[i, "xmin"], bbox_id[i, "xmax"]), c(bbox_id[i, "ymin"], bbox_id[i, "ymax"]))))
+for (i in 1:1119) {
+  ppp_obj <- ppp(y4$data[[i]]$Longitude, y4$data[[i]]$Latitude, window = owin(c(bbox_id[i, "xmin"], bbox_id[i, "xmax"]), c(bbox_id[i, "ymin"], bbox_id[i, "ymax"])))
   y5[[i]] <- ppp_obj
 }
+
+map(y5, ~ clarkevans.test2(.x, correction="cdf")$statistic.SES)
+test <- .Last.value
 
 ##################################à######
 
 y4 <- d%>% 
-  dplyr::select(Longitude, Latitude, id)%>% filter(id<20000)
+  dplyr::select(Longitude, Latitude, id)%>% filter(id<20000)%>%
   unique()%>% 
   group_by(id)%>%
   nest()
