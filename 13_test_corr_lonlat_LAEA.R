@@ -59,13 +59,6 @@ d3035 <- readRDS("d2_LAEA.rds")
 
 ############ PLOT  3035 #############
 
-x2<- raster(xmn= -180, xmx= 180, ymn= -90, ymx=90, res= 55500)
-
-
-
-vals2 <- 1:ncell(x2)
-r2 <- setValues(x2, vals2)
-crs(r2) <- "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs"
 
 ####change crs base raster
 r_reprojected <- projectRaster(r, crs = "+proj=laea +lat_0=52 +lon_0=10 +x_0=4321000 +y_0=3210000 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs", method = "bilinear")
