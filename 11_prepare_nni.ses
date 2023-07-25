@@ -243,6 +243,6 @@ for (i in 1:1119) {
   y5[[i]] <- ppp_obj
 }
 
-map(y5, ~ clarkevans.test2(.x, correction="cdf"))
-test <- .Last.value
+test <- map(y5, ~ clarkevans.test2(.x, correction="cdf"))
+
 
