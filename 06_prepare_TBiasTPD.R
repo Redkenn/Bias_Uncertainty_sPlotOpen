@@ -70,22 +70,22 @@ df_sp %>%
   geom_sf(data=world,
           colour = "black", fill = "transparent")+
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
-  coord_sf(xlim = c(-20, 51), ylim = c(30, 71), expand = TRUE)+
+  coord_sf(xlim = c(-13, 51), ylim = c(36, 71), expand = TRUE)+
   labs(title = "Pielou's evenness", x="Longitude", y="Latitude", fill = "J Index") +theme_light()+
-  theme(legend.background=element_blank(),
-        panel.grid = element_blank(),
-        legend.position = 'bottom',
-        plot.title = element_text(size=12,face = 'bold',hjust = 0.5),
-        legend.title=element_text(size=12,face = 'bold'),
-        axis.title.x = element_text(size=12,face = 'bold'),
-        axis.text.x = element_text(size = 10, face = 'bold'),
-        axis.title.y = element_text(size=12,face = 'bold'),
-        axis.text.y = element_text(size = 10, face = 'bold'),
-        axis.ticks.y=element_blank(),
-        text = element_text(size=12), 
-        strip.text = element_text(size=12),
-        legend.text = element_text(size=12,angle = 0), 
-        legend.key.size = unit(0.8, 'cm'))   ->plot
+ theme(legend.background=element_blank(),
+          panel.grid = element_blank(),
+          legend.position = 'bottom',
+          plot.title = element_text(size=17,face = 'bold',hjust = 0.5),
+          legend.title=element_text(size=12,face = 'bold'),
+          axis.title.x = element_text(size=14,face = 'bold'),
+          axis.text.x = element_text(size = 10, face = 'bold'),
+          axis.title.y = element_text(size=14,face = 'bold'),
+          axis.text.y = element_text(size = 10, face = 'bold'),
+          axis.ticks.y=element_blank(),
+          text = element_text(size=12), 
+          strip.text = element_text(size=12),
+          legend.text = element_text(size=12,angle = 0), 
+          legend.key.size = unit(0.8, 'cm'))   ->plot
 
 
 ggsave(plot = plot,
