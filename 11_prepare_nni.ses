@@ -260,3 +260,6 @@ extracted_values.nniSES[[i]] <- test[[i]][["statistic.SES"]][["R"]]
 combined_values.nniSES <- unlist(extracted_values.nniSES)
 
 nni.ses <- combined_values.nniSES
+
+NNI.NNI_SES <- data.frame(nni=nni, nni.ses=nni.ses) %>% cbind(id=y4$id)
+
