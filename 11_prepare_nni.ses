@@ -245,18 +245,18 @@ for (i in 1:1119) {
 
 test <- map(y5, ~ clarkevans.test2(.x, correction="cdf"))
 
-extracted_values <- list()
+extracted_values.nni <- list()
  for (i in 1:length(test)) {
-extracted_values[[i]] <- test[[i]][["statistic"]][["R"]]
+extracted_values.nni[[i]] <- test[[i]][["statistic"]][["R"]]
 }
-combined_values <- unlist(extracted_values)
+combined_values.nni <- unlist(extracted_values.nni)
 
-test$nni <- combined_values
+nni <- combined_values.nni
 
-extracted_values <- list()
+extracted_values.nniSES <- list()
  for (i in 1:length(test)) {
-extracted_values[[i]] <- test[[i]][["statistic.SES"]][["R"]]
+extracted_values.nniSES[[i]] <- test[[i]][["statistic.SES"]][["R"]]
 }
-combined_values <- unlist(extracted_values)
+combined_values.nniSES <- unlist(extracted_values.nniSES)
 
-test$nni.ses <- combined_values
+nni.ses <- combined_values.nniSES
