@@ -2,7 +2,9 @@ library(tidyverse)
 library(spatstat)
 library(raster)
 library(sf)
-
+library(ggplot2)
+library(sf)
+library(rnaturalearth)
 
 ##### spatstat functions #####
 clarkevans <- function(X, correction=c("none", "Donnelly", "cdf"),
