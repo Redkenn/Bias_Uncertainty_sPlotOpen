@@ -313,7 +313,7 @@ wmdTU <- dtu %>% group_by(id) %>%
   s2<- GGstack_wmTU %>%
     ggplot() +
     geom_tile(aes(x = x, y = y, fill = value)) +
-    facet_wrap(~ variable, nrow = 3) + 
+    facet_wrap(~ variable, nrow = 1) + 
     geom_sf(data=world,
             colour = "black", fill = "transparent", size=0.3)+  
     scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7, limits=c(2.789468e-10,1))+
