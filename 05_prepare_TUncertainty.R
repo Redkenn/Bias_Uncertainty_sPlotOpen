@@ -335,7 +335,7 @@ wmdTU <- dtu %>% group_by(id) %>%
       strip.text = element_text(size = 18,face = 'bold', colour = "black"))+
     guides(fill = guide_colourbar(title.position="top", title.hjust = 0.5, barwidth = 21, barheight = 1.9),
            size = guide_legend(title.position="top", title.hjust = 0.5))+
-    coord_sf(xlim = c(-26, 41), ylim = c(32, 72), expand = TRUE)
+    coord_sf(xlim = c(-13, 42), ylim = c(36, 71), expand = TRUE)
 
   
   ggsave(plot = s1,
