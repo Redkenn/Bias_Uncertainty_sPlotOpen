@@ -148,3 +148,82 @@ names(scaled_data)[pred_cols]
 form_gamEV <- as.formula(paste0(names(scaled_data)[EV], "~", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+")))
 ModelEV <- gam(form_gamEV, data = scaled_data)
 summary(ModelEV) #guardo F e p value related
+
+
+################ RISULTATI #####################
+
+
+Formula:
+comp ~ s(rIN) + s(nPlot) + s(pop) + s(dis) + s(rough)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.415929   0.006981   59.58   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+           edf Ref.df      F p-value    
+s(rIN)   4.570  5.552  3.228 0.00498 ** 
+s(nPlot) 6.547  7.643 59.987 < 2e-16 ***
+s(pop)   1.000  1.000  0.517 0.47239    
+s(dis)   7.602  8.510  1.869 0.09751 .  
+s(rough) 2.364  2.926  2.804 0.03550 *  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.554   Deviance explained = 57.6%
+GCV = 0.023215  Scale est. = 0.022029  n = 452
+> cor_matrix <- cor(scaled_data[pred_cols])
+> cor_matrix
+              rIN       nPlot         pop          dis        rough
+rIN    1.00000000 -0.07908232 -0.04320145 -0.068901307 -0.011835176
+nPlot -0.07908232  1.00000000  0.03926546  0.092798767  0.138622827
+pop   -0.04320145  0.03926546  1.00000000  0.563492034 -0.185948357
+dis   -0.06890131  0.09279877  0.56349203  1.000000000  0.004308579
+rough -0.01183518  0.13862283 -0.18594836  0.004308579  1.000000000
+
+
+Formula:
+nni ~ s(rIN) + s(nPlot) + s(pop) + s(dis) + s(rough)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept) 0.297762   0.009842   30.25   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+           edf Ref.df      F  p-value    
+s(rIN)   1.558  1.912 14.617 1.78e-06 ***
+s(nPlot) 3.031  3.740  3.816  0.00599 ** 
+s(pop)   1.949  2.430  1.270  0.22772    
+s(dis)   1.414  1.719  0.936  0.27066    
+s(rough) 1.000  1.000  0.063  0.80157    
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.116   Deviance explained = 13.5%
+GCV = 0.040898  Scale est. = 0.03991   n = 412
+
+Formula:
+J ~ s(rIN) + s(nPlot) + s(pop) + s(dis) + s(rough)
+
+Parametric coefficients:
+            Estimate Std. Error t value Pr(>|t|)    
+(Intercept)  0.47672    0.01324      36   <2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Approximate significance of smooth terms:
+           edf Ref.df     F p-value    
+s(rIN)   3.559  4.372 9.939 < 2e-16 ***
+s(nPlot) 4.664  5.676 2.609 0.02176 *  
+s(pop)   1.000  1.000 0.205 0.65100    
+s(dis)   7.760  8.607 2.712 0.00806 ** 
+s(rough) 1.910  2.373 2.661 0.05798 .  
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+R-sq.(adj) =  0.137   Deviance explained = 17.1%
+GCV = 0.089207  Scale est. = 0.08557   n = 488
