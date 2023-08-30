@@ -1,17 +1,16 @@
 library(sf)
 library(rnaturalearth)
 library(tidyverse)
-library(raster)
-library(rgdal)
+library(raster) #### TO CHANGE FUNCTION WITH TERRA
+library(rgdal) #### TO CHANGE FUNCTION WITH???
 
-## join sPlotOpen datasets
+######### join sPlotOpen datasets ##########
+# first: loadding sPlotOpen .RData
 
-DT2.oa$Species <- gsub(DT2.oa$Species,pattern = ' ',replacement = '_')
+DT2.oa$Species <- gsub(DT2.oa$Species, pattern = ' ', replacement = '_')
 species_level <- DT2.oa[grepl("_", DT2.oa$Species),]
 NOspecies_level <- DT2.oa[!grepl("_", DT2.oa$Species),] 
 
-
-#d$d.Species <- gsub(d$d.Species,pattern = ' ',replacement = '_')
 d <- merge(species_level, header.oa, by='PlotObservationID')
 
 # filtering for Europe, Year >= 1992 and Location uncertainty < 250
