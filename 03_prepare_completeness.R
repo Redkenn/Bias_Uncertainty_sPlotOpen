@@ -8,7 +8,6 @@ library(rnaturalearth)
 #### Completeness per grids with incidence data
 
 d <- readRDS("d.rds")
-#d$Species <- gsub(d$Species,pattern = '_',replacement = ' ')
 
 # adding incidence value for each record
 
