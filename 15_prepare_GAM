@@ -4,6 +4,9 @@ library(tidyverse)
 library(raster)
 library(rgdal)
 library(mgcv)
+library(spdep)
+library(gratia)
+library(patchwork)
 
 NNI.NNI_SES <- readRDS("NNI.NNI_SES.rds")
 
@@ -11,10 +14,6 @@ nNat2 <- readRDS("nNat2.rds")
 nNat <- nNat2@data %>%  dplyr::select(id, countIN)%>% unique()
 
 d <- readRDS("d.rds")
-nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
-  mutate(nPlot = n()) %>%
-  ungroup() %>% dplyr::select(id, nPlot)%>% unique()
-
 
 
 
@@ -27,6 +26,12 @@ r <- setValues(r, vals)
 
 df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
+
+nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
+  mutate(nPlot = n()) %>%
+  ungroup() %>% dplyr::select(id, nPlot)%>% unique()%>%
+  inner_join(., df.r, by="id")
+
 
 est <- read.csv("Estimators.CSV", header=T, sep=";")
 est$Latitude <- gsub(est$Latitude,pattern = ',',replacement = '.')
@@ -68,18 +73,24 @@ Vdis <- raster::extract(median_dist,ctr)
 Vcompr <- raster::extract(compr,ctr)
 Vrough <- raster::extract(rough,ctr)
 
-####  GAM Completeness ####
-NAT_DIS_PLOT_POP_COMP_ROU <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, comp=Vcompr, rough=Vrough) %>% drop_na()
-NAT_DIS_PLOT_POP_COMP_ROU <- NAT_DIS_PLOT_POP_COMP_ROU[,-6]
+######### Testing spatial autocorrelation in GAM model without s(x,y) ##########
+
+##### completeness ####
+
+NAT_DIS_PLOT_POP_COMP_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, comp=Vcompr, rough=Vrough) %>% drop_na()
+
+
+NAT_DIS_PLOT_POP_COMP_ROU <- NAT_DIS_PLOT_POP_COMP_ROU_auto %>% dplyr::select(rIN, nPlot, dis,pop, comp.Completeness, rough)
 
 
 scaled_data <- NAT_DIS_PLOT_POP_COMP_ROU %>%
   mutate(across(everything(), scale)) %>%
   mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
 
-colnames(scaled_data) <- c("id","rIN","nPlot","pop","dis","comp","rough")
-scaled_data <- scaled_data  %>% relocate("comp", .before = "id")
-scaled_data <- scaled_data[,-2]
+colnames(scaled_data) <- c("rIN","nPlot","pop","dis","comp","rough")
+scaled_data <- scaled_data  %>% relocate("comp", .before = "rIN")
+
+
 COMP <- 1
 pred_cols <- 2:6
 
@@ -90,30 +101,47 @@ cor_matrix <- cor(scaled_data[pred_cols])
 
 form_gamCOMP <- as.formula(paste0(names(scaled_data)[COMP], "~", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+")))
 ModelCOMP <- gam(form_gamCOMP, data = scaled_data)
-summary(ModelCOMP) #guardo F e p value related
+
+mor <- data.frame(cbind(resid=ModelCOMP[["residuals"]], x=NAT_DIS_PLOT_POP_COMP_ROU_auto$x, y=NAT_DIS_PLOT_POP_COMP_ROU_auto$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+moran
+
+#Monte-Carlo simulation of Moran I
+
+#data:  mor$resid 
+#weights: weights  
+#number of simulations + 1: 1000 
+
+#statistic = 0.22247, observed rank = 1000, p-value = 0.001
+#alternative hypothesis: greater
 
 
-#library(car)
-#vif <- vif(ModelCOMP)
-
-#model <- glm(comp ~ rIN+nPlot+pop+dis+rough, data = scaled_data)
-#coefficients <- coef(model)
-#library(car)
-#vif <- vif(model)
-
-####  GAM NNI ####
+############## NNI
 
 NNI <- NNI.NNI_SES %>% dplyr::select(id, nni)
-NAT_DIS_PLOT_POP_NNI_ROU <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(., NNI, by="id") %>% drop_na()
-NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU[,-1]
+NAT_DIS_PLOT_POP_NNI_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(., NNI, by="id") %>% drop_na()
+
+
+NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU_auto %>% dplyr::select(rIN, nPlot, dis,pop, rough, nni)
 
 
 scaled_data <- NAT_DIS_PLOT_POP_NNI_ROU %>%
   mutate(across(everything(), scale)) %>%
   mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
 
-colnames(scaled_data) <- c("rIN","nPlot","pop","dis","rough","nni")
+
 scaled_data <- scaled_data  %>% relocate("nni", .before = "rIN")
+colnames(scaled_data) <- c("nni","rIN","nPlot", "x", "y", "pop","dis","rough")
+scaled_data <- scaled_data  %>% relocate("pop", .before = "x")
+scaled_data <- scaled_data  %>% relocate("dis", .before = "x")
+scaled_data <- scaled_data  %>% relocate("rough", .before = "x")
 
 NNI <- 1
 pred_cols <- 2:6
@@ -121,22 +149,47 @@ pred_cols <- 2:6
 names(scaled_data)[NNI]
 names(scaled_data)[pred_cols]
 
-form_gamNNI <- as.formula(paste0(names(scaled_data)[NNI], "~", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+")))
-ModelNNI <- gam(form_gamNNI, data = scaled_data)
-summary(ModelNNI) #guardo F e p value related
 
-####  GAM Evenness ####
+
+form_gamNNI <- as.formula(paste0(names(scaled_data)[COMP], "~", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+")))
+ModelNNI <- gam(form_gamNNI, data = scaled_data)
+
+mor <- data.frame(cbind(resid=ModelNNI[["residuals"]], x=NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE, k=4), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+moran
+
+#Monte-Carlo simulation of Moran I
+
+#data:  mor$resid 
+#weights: weights  
+#number of simulations + 1: 1000 
+
+#statistic = 0.071721, observed rank = 989, p-value = 0.011
+#alternative hypothesis: greater
+
+
+
+
+############## evenness 
 
 df <- df %>% dplyr::select(id, J)
 NAT_DIS_PLOT_POP_EV_ROU <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(.,df, by="id") %>% drop_na()
 NAT_DIS_PLOT_POP_EV_ROU <- NAT_DIS_PLOT_POP_EV_ROU[,-1]
 
+NAT_DIS_PLOT_POP_EV_ROU_auto <- NAT_DIS_PLOT_POP_EV_ROU%>% dplyr::select(rIN, nPlot, dis,pop, rough, J)
 
-scaled_data <- NAT_DIS_PLOT_POP_EV_ROU %>%
+
+scaled_data <- NAT_DIS_PLOT_POP_EV_ROU_auto %>%
   mutate(across(everything(), scale)) %>%
   mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
 
-colnames(scaled_data) <- c("rIN","nPlot","pop","dis","rough","J")
 scaled_data <- scaled_data  %>% relocate("J", .before = "rIN")
 
 EV <- 1
@@ -147,83 +200,252 @@ names(scaled_data)[pred_cols]
 
 form_gamEV <- as.formula(paste0(names(scaled_data)[EV], "~", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+")))
 ModelEV <- gam(form_gamEV, data = scaled_data)
-summary(ModelEV) #guardo F e p value related
+
+mor <- data.frame(cbind(resid=ModelEV[["residuals"]], x=NAT_DIS_PLOT_POP_EV_ROU$x, y=NAT_DIS_PLOT_POP_EV_ROU$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+
+#Monte-Carlo simulation of Moran I
+
+#data:  mor$resid 
+#weights: weights  
+#number of simulations + 1: 1000 
+
+#statistic = 0.20469, observed rank = 1000, p-value = 0.001
+#alternative hypothesis: greater
 
 
-################ RISULTATI #####################
+########## GAM COMP with  S(x,y) ########
+
+NAT_DIS_PLOT_POP_COMP_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, comp=Vcompr, rough=Vrough) %>% drop_na()
 
 
-Formula:
-comp ~ s(rIN) + s(nPlot) + s(pop) + s(dis) + s(rough)
-
-Parametric coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 0.415929   0.006981   59.58   <2e-16 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-Approximate significance of smooth terms:
-           edf Ref.df      F p-value    
-s(rIN)   4.570  5.552  3.228 0.00498 ** 
-s(nPlot) 6.547  7.643 59.987 < 2e-16 ***
-s(pop)   1.000  1.000  0.517 0.47239    
-s(dis)   7.602  8.510  1.869 0.09751 .  
-s(rough) 2.364  2.926  2.804 0.03550 *  
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
-
-R-sq.(adj) =  0.554   Deviance explained = 57.6%
-GCV = 0.023215  Scale est. = 0.022029  n = 452
-> cor_matrix <- cor(scaled_data[pred_cols])
-> cor_matrix
-              rIN       nPlot         pop          dis        rough
-rIN    1.00000000 -0.07908232 -0.04320145 -0.068901307 -0.011835176
-nPlot -0.07908232  1.00000000  0.03926546  0.092798767  0.138622827
-pop   -0.04320145  0.03926546  1.00000000  0.563492034 -0.185948357
-dis   -0.06890131  0.09279877  0.56349203  1.000000000  0.004308579
-rough -0.01183518  0.13862283 -0.18594836  0.004308579  1.000000000
+NAT_DIS_PLOT_POP_COMP_ROU <- NAT_DIS_PLOT_POP_COMP_ROU_auto %>% dplyr::select(rIN, dis,pop, comp.Completeness, rough)
 
 
-Formula:
-nni ~ s(rIN) + s(nPlot) + s(pop) + s(dis) + s(rough)
+scaled_data <- NAT_DIS_PLOT_POP_COMP_ROU %>%
+  mutate(across(everything(), scale)) %>%
+  mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
 
-Parametric coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept) 0.297762   0.009842   30.25   <2e-16 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+colnames(scaled_data) <- c("rIN","pop","dis","comp","rough")
+scaled_data <- scaled_data  %>% relocate("comp", .before = "rIN")
 
-Approximate significance of smooth terms:
-           edf Ref.df      F  p-value    
-s(rIN)   1.558  1.912 14.617 1.78e-06 ***
-s(nPlot) 3.031  3.740  3.816  0.00599 ** 
-s(pop)   1.949  2.430  1.270  0.22772    
-s(dis)   1.414  1.719  0.936  0.27066    
-s(rough) 1.000  1.000  0.063  0.80157    
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+scaled_data <- scaled_data  %>% cbind(x= NAT_DIS_PLOT_POP_COMP_ROU_auto$x, y=NAT_DIS_PLOT_POP_COMP_ROU_auto$y)
 
-R-sq.(adj) =  0.116   Deviance explained = 13.5%
-GCV = 0.040898  Scale est. = 0.03991   n = 412
+COMP <- 1
+pred_cols <- 2:5
 
-Formula:
-J ~ s(rIN) + s(nPlot) + s(pop) + s(dis) + s(rough)
 
-Parametric coefficients:
-            Estimate Std. Error t value Pr(>|t|)    
-(Intercept)  0.47672    0.01324      36   <2e-16 ***
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+names(scaled_data)[COMP]
+names(scaled_data)[pred_cols]
 
-Approximate significance of smooth terms:
-           edf Ref.df     F p-value    
-s(rIN)   3.559  4.372 9.939 < 2e-16 ***
-s(nPlot) 4.664  5.676 2.609 0.02176 *  
-s(pop)   1.000  1.000 0.205 0.65100    
-s(dis)   7.760  8.607 2.712 0.00806 ** 
-s(rough) 1.910  2.373 2.661 0.05798 .  
----
-Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 
-R-sq.(adj) =  0.137   Deviance explained = 17.1%
-GCV = 0.089207  Scale est. = 0.08557   n = 488
+
+
+form_gamCOMP <- as.formula(paste0(names(scaled_data)[COMP], "~", paste0("s(x,y)","+", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+"))))
+ModelCOMP <- gam(form_gamCOMP, data = scaled_data, method = "REML")
+
+mor <- data.frame(cbind(resid=ModelCOMP[["residuals"]], x=NAT_DIS_PLOT_POP_COMP_ROU_auto$x, y=NAT_DIS_PLOT_POP_COMP_ROU_auto$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE, k=6), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+moran
+
+
+
+############ GAM NNI s(x,y)
+
+
+NNI <- NNI.NNI_SES %>% dplyr::select(id, nni)
+NAT_DIS_PLOT_POP_NNI_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(., NNI, by="id") %>% drop_na()
+
+
+NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU_auto %>% dplyr::select(rIN, nPlot, dis,pop, rough, nni)
+
+
+scaled_data <- NAT_DIS_PLOT_POP_NNI_ROU %>%
+  mutate(across(everything(), scale)) %>%
+  mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
+
+
+scaled_data <- scaled_data  %>% relocate("nni", .before = "rIN")
+
+scaled_data <- scaled_data  %>% cbind(x= NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y)
+
+colnames(scaled_data) <- c("nni","rIN","nPlot", "pop","dis","rough", "x", "y")
+
+NNI <- 1
+pred_cols <- 2:6
+
+names(scaled_data)[NNI]
+names(scaled_data)[pred_cols]
+
+
+form_gamNNI <- as.formula(paste0(names(scaled_data)[COMP], "~", paste0("s(x,y)","+", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+"))))
+ModelNNI <- gam(form_gamNNI, data = scaled_data, method = "REML")
+
+mor <- data.frame(cbind(resid=ModelNNI[["residuals"]], x=NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+moran
+
+p <- draw(ModelNNI)
+p
+
+
+######## GAM EVenness
+
+
+df <- df %>% dplyr::select(id, J)
+NAT_DIS_PLOT_POP_EV_ROU <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(.,df, by="id") %>% drop_na()
+NAT_DIS_PLOT_POP_EV_ROU <- NAT_DIS_PLOT_POP_EV_ROU[,-1]
+
+NAT_DIS_PLOT_POP_EV_ROU_auto <- NAT_DIS_PLOT_POP_EV_ROU%>% dplyr::select(rIN, dis,pop, rough, J)
+
+
+scaled_data <- NAT_DIS_PLOT_POP_EV_ROU_auto %>%
+  mutate(across(everything(), scale)) %>%
+  mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
+
+scaled_data <- scaled_data  %>% relocate("J", .before = "rIN")
+colnames(scaled_data)<- c("J","rIN","dis","pop","rough")
+scaled_data <- scaled_data %>% cbind(x=NAT_DIS_PLOT_POP_EV_ROU$x, y=NAT_DIS_PLOT_POP_EV_ROU$y)
+EV <- 1
+pred_cols <- 2:5
+
+names(scaled_data)[EV]
+names(scaled_data)[pred_cols]
+
+form_gamEV <- as.formula(paste0(names(scaled_data)[EV], "~", paste0("s(x,y)","+", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+"))))
+ModelEV <- gam(form_gamEV, data = scaled_data, method = "REML")
+
+mor <- data.frame(cbind(resid=ModelEV[["residuals"]], x=NAT_DIS_PLOT_POP_EV_ROU$x, y=NAT_DIS_PLOT_POP_EV_ROU$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+
+
+###### GAM NNI without random distribution
+
+NNI <- NNI.NNI_SES %>% dplyr::select(id, nni)
+NAT_DIS_PLOT_POP_NNI_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(., NNI, by="id") %>% drop_na()%>%
+  filter(!nni>1)
+
+
+NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU_auto %>% dplyr::select(rIN, dis,pop, rough, nni)
+
+
+scaled_data <- NAT_DIS_PLOT_POP_NNI_ROU %>%
+  mutate(across(everything(), scale)) %>%
+  mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
+
+
+scaled_data <- scaled_data  %>% relocate("nni", .before = "rIN")
+
+scaled_data <- scaled_data  %>% cbind(x= NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y)
+
+colnames(scaled_data) <- c("nni","rIN", "pop","dis","rough", "x", "y")
+
+NNI <- 1
+pred_cols <- 2:5
+
+names(scaled_data)[NNI]
+names(scaled_data)[pred_cols]
+
+
+form_gamNNI <- as.formula(paste0(names(scaled_data)[NNI], "~", paste0("s(x,y)","+", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+"))))
+ModelNNI <- gam(form_gamNNI, data = scaled_data, method = "REML")
+
+mor <- data.frame(cbind(resid=ModelNNI[["residuals"]], x=NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE, k=4), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+moran
+
+#### non cambia un casso
+
+#### GAM nni ses
+
+NNI <- NNI.NNI_SES %>% dplyr::select(id, nni.ses)
+NAT_DIS_PLOT_POP_NNI_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(., NNI, by="id") %>% drop_na()
+
+
+
+NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU_auto %>% dplyr::select(rIN, dis,pop, rough, nni.ses)
+
+
+scaled_data <- NAT_DIS_PLOT_POP_NNI_ROU %>%
+  mutate(across(everything(), scale)) %>%
+  mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
+
+
+scaled_data <- scaled_data  %>% relocate("nni.ses", .before = "rIN")
+
+scaled_data <- scaled_data  %>% cbind(x= NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y)
+
+colnames(scaled_data) <- c("nni","rIN", "pop","dis","rough", "x", "y")
+
+NNI <- 1
+pred_cols <- 2:5
+
+names(scaled_data)[NNI]
+names(scaled_data)[pred_cols]
+
+
+form_gamNNI <- as.formula(paste0(names(scaled_data)[NNI], "~", paste0("s(x,y)","+", paste0("s(", names(scaled_data)[pred_cols], ")", collapse = "+"))))
+ModelNNI <- gam(form_gamNNI, data = scaled_data, method = "REML")
+
+mor <- data.frame(cbind(resid=ModelNNI[["residuals"]], x=NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y))
+
+coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +datum=WGS84"))
+
+spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
+
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE, k=4), sym=T)
+weights <- nb2listw(spatial_weights, style="B")
+moran <- moran.mc(mor$resid, weights, nsim=999)
+moran
+
+
+############# DRAW PANNEL #############
+
+p1 <- draw(ModelEV, select = "s(rIN)")
+p2 <- draw(ModelEV, select = "s(dis)")
+
+pEv <- p1 + p2 + plot_layout(ncol = 2)
+
+p1 <- draw(ModelCOMP, select = "s(rIN)")
+p2 <- draw(ModelCOMP, select = "s(rough)")
+
+pcom <- p1 + p2 + plot_layout(ncol = 2)
+
+Pnni <- draw(ModelNNI, select= "s(rIN)")
+
+ptot <- pcom + pEv+Pnni + plot_layout(nrow=3)
