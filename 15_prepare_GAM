@@ -226,7 +226,7 @@ coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +dat
 
 spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
 
-spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE, k=6), sym=T)
 weights <- nb2listw(spatial_weights, style="B")
 moran <- moran.mc(mor$resid, weights, nsim=999)
 moran
@@ -311,10 +311,10 @@ coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +dat
 
 spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
 
-spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE, k=2), sym=T)
 weights <- nb2listw(spatial_weights, style="B")
 moran <- moran.mc(mor$resid, weights, nsim=999)
-
+moran
 
 ###### GAM NNI without random distribution
 
@@ -396,7 +396,7 @@ coordinates_sp <- SpatialPoints(mor[,2:3], proj4string = CRS("+proj=longlat +dat
 
 spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
 
-spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
+spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE, k=2), sym=T)
 weights <- nb2listw(spatial_weights, style="B")
 moran <- moran.mc(mor$resid, weights, nsim=999)
 moran
