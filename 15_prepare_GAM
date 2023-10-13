@@ -80,19 +80,19 @@ Vrough <- raster::extract(rough,ctr)
 NAT_DIS_PLOT_POP_COMP_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, comp=Vcompr, rough=Vrough) %>% drop_na()
 
 
-NAT_DIS_PLOT_POP_COMP_ROU <- NAT_DIS_PLOT_POP_COMP_ROU_auto %>% dplyr::select(rIN, nPlot, dis,pop, comp.Completeness, rough)
+NAT_DIS_PLOT_POP_COMP_ROU <- NAT_DIS_PLOT_POP_COMP_ROU_auto %>% dplyr::select(rIN, dis,pop, comp.Completeness, rough)
 
 
 scaled_data <- NAT_DIS_PLOT_POP_COMP_ROU %>%
   mutate(across(everything(), scale)) %>%
   mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
 
-colnames(scaled_data) <- c("rIN","nPlot","pop","dis","comp","rough")
+colnames(scaled_data) <- c("rIN","pop","dis","comp","rough")
 scaled_data <- scaled_data  %>% relocate("comp", .before = "rIN")
 
 
 COMP <- 1
-pred_cols <- 2:6
+pred_cols <- 2:5
 
 names(scaled_data)[COMP]
 names(scaled_data)[pred_cols]
@@ -113,14 +113,6 @@ weights <- nb2listw(spatial_weights, style="B")
 moran <- moran.mc(mor$resid, weights, nsim=999)
 moran
 
-#Monte-Carlo simulation of Moran I
-
-#data:  mor$resid 
-#weights: weights  
-#number of simulations + 1: 1000 
-
-#statistic = 0.22247, observed rank = 1000, p-value = 0.001
-#alternative hypothesis: greater
 
 
 ############## NNI
@@ -129,7 +121,7 @@ NNI <- NNI.NNI_SES %>% dplyr::select(id, nni)
 NAT_DIS_PLOT_POP_NNI_ROU_auto <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(., NNI, by="id") %>% drop_na()
 
 
-NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU_auto %>% dplyr::select(rIN, nPlot, dis,pop, rough, nni)
+NAT_DIS_PLOT_POP_NNI_ROU <- NAT_DIS_PLOT_POP_NNI_ROU_auto %>% dplyr::select(rIN, dis,pop, rough, nni)
 
 
 scaled_data <- NAT_DIS_PLOT_POP_NNI_ROU %>%
@@ -138,13 +130,11 @@ scaled_data <- NAT_DIS_PLOT_POP_NNI_ROU %>%
 
 
 scaled_data <- scaled_data  %>% relocate("nni", .before = "rIN")
-colnames(scaled_data) <- c("nni","rIN","nPlot", "x", "y", "pop","dis","rough")
-scaled_data <- scaled_data  %>% relocate("pop", .before = "x")
-scaled_data <- scaled_data  %>% relocate("dis", .before = "x")
-scaled_data <- scaled_data  %>% relocate("rough", .before = "x")
+colnames(scaled_data) <- c("nni","rIN", "pop","dis","rough")
+
 
 NNI <- 1
-pred_cols <- 2:6
+pred_cols <- 2:5
 
 names(scaled_data)[NNI]
 names(scaled_data)[pred_cols]
@@ -165,25 +155,13 @@ weights <- nb2listw(spatial_weights, style="B")
 moran <- moran.mc(mor$resid, weights, nsim=999)
 moran
 
-#Monte-Carlo simulation of Moran I
-
-#data:  mor$resid 
-#weights: weights  
-#number of simulations + 1: 1000 
-
-#statistic = 0.071721, observed rank = 989, p-value = 0.011
-#alternative hypothesis: greater
-
-
-
-
 ############## evenness 
 
 df <- df %>% dplyr::select(id, J)
 NAT_DIS_PLOT_POP_EV_ROU <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(.,df, by="id") %>% drop_na()
 NAT_DIS_PLOT_POP_EV_ROU <- NAT_DIS_PLOT_POP_EV_ROU[,-1]
 
-NAT_DIS_PLOT_POP_EV_ROU_auto <- NAT_DIS_PLOT_POP_EV_ROU%>% dplyr::select(rIN, nPlot, dis,pop, rough, J)
+NAT_DIS_PLOT_POP_EV_ROU_auto <- NAT_DIS_PLOT_POP_EV_ROU%>% dplyr::select(rIN, dis,pop, rough, J)
 
 
 scaled_data <- NAT_DIS_PLOT_POP_EV_ROU_auto %>%
@@ -193,7 +171,7 @@ scaled_data <- NAT_DIS_PLOT_POP_EV_ROU_auto %>%
 scaled_data <- scaled_data  %>% relocate("J", .before = "rIN")
 
 EV <- 1
-pred_cols <- 2:6
+pred_cols <- 2:5
 
 names(scaled_data)[EV]
 names(scaled_data)[pred_cols]
@@ -210,16 +188,7 @@ spatial_weights <- knearneigh(coordinates_sp, longlat = TRUE)
 spatial_weights <- knn2nb(knearneigh(coordinates_sp, longlat = TRUE), sym=T)
 weights <- nb2listw(spatial_weights, style="B")
 moran <- moran.mc(mor$resid, weights, nsim=999)
-
-#Monte-Carlo simulation of Moran I
-
-#data:  mor$resid 
-#weights: weights  
-#number of simulations + 1: 1000 
-
-#statistic = 0.20469, observed rank = 1000, p-value = 0.001
-#alternative hypothesis: greater
-
+moran
 
 ########## GAM COMP with  S(x,y) ########
 
