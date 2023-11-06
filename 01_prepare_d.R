@@ -1,8 +1,8 @@
 library(sf)
 library(rnaturalearth)
 library(tidyverse)
-library(raster) #### TO CHANGE FUNCTION WITH TERRA
-library(rgdal) #### TO CHANGE FUNCTION WITH???
+library(raster) 
+library(rgdal) 
 
 ######### join sPlotOpen datasets ##########
 # first: loadding sPlotOpen .RData
