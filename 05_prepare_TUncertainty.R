@@ -111,9 +111,9 @@ write_rds(plot, "nPlotr_sp.rds")
 ############ plot temporal uncertainty median ############
 
 dtu<- d %>% dplyr::select(id, PlotObservationID, TU1, TU5, TU25)%>% unique()%>% group_by(id)  %>%
-  mutate(median1= median(TU1)) %>%
-  mutate(median5= median(TU5)) %>%
-  mutate(median25= median(TU25)) %>%
+  mutate(median1= median(1-TU1)) %>%
+  mutate(median5= median(1-TU5)) %>%
+  mutate(median25= median(1-TU25)) %>%
   ungroup() %>%   
   dplyr::select(median1, median5, median25, id)
 
