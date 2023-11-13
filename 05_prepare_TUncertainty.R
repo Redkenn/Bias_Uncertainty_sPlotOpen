@@ -236,7 +236,7 @@ s1<- GGstack_TU %>%
   facet_wrap(~ variable, nrow = 3) + 
   geom_sf(data=world,
           colour = "black", fill = "transparent", size=0.3)+  
-  scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7, limits=c(2.789468e-10,1))+
+  scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7, limits=c(0, 1.0000000))+
   labs(x="Longitude",y="Latitude", fill="Median")+
   theme_light()+
   theme(
