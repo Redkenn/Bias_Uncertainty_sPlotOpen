@@ -227,35 +227,41 @@ GGstack_TU <-
 GGstack_TU$variable <- as.factor(GGstack_TU$variable)
 
 world <- ne_coastline(scale = "medium", returnclass = "sf")
+
 GGstack_TU <- GGstack_TU %>%
   mutate(variable = str_replace_all(variable, c("median1" = "z=-1", "median5" = "z=-1/5", "median25" = "z=-1/25")))
+
+# Order the levels of the variable column
+GGstack_TU$variable <- factor(GGstack_TU$variable, levels = c("z=-1", "z=-1/5", "z=-1/25"))
+
 
 s1<- GGstack_TU %>%
   ggplot() +
   geom_tile(aes(x = x, y = y, fill = value)) +
-  facet_wrap(~ variable, nrow = 3) + 
+  facet_wrap(~ variable, nrow = 1) + 
   geom_sf(data=world,
           colour = "black", fill = "transparent", size=0.3)+  
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7, limits=c(0, 1.0000000))+
-  labs(x="Longitude",y="Latitude", fill="Median")+
+  labs(x="Longitude",y="Latitude", fill="Uncertainty (median)")+
   theme_light()+
-  theme(
-    legend.position = "bottom",  
-    plot.title = element_text(size=30,face = 'bold',hjust = 0.5),
-    legend.title=element_text(size=20,face = 'bold'),
-    legend.text = element_text(size=18,face = 'bold'),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    panel.background = element_blank(),
-    axis.title.x = element_text(size=19,face = 'bold'),
-    axis.text.x = element_text(size = 19, face = 'bold'),
-    axis.title.y = element_text(size=23,face = 'bold'),
-    axis.text.y = element_text(size = 19, face = 'bold'),
-    axis.ticks.y=element_blank(),
-  strip.text = element_text(size = 18,face = 'bold', colour = "black"))+
-  guides(fill = guide_colourbar(title.position="top", title.hjust = 0.5, barwidth = 21, barheight = 1.9),
-         size = guide_legend(title.position="top", title.hjust = 0.5))+
-  coord_sf(xlim = c(-26, 41), ylim = c(32, 72), expand = TRUE)
+  theme_light()+
+    theme(
+      legend.position = "bottom",  
+      plot.title = element_text(size=30,face = 'bold',hjust = 0.5),
+      legend.title=element_text(size=20,face = 'bold'),
+      legend.text = element_text(size=18,face = 'bold'),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      panel.background = element_blank(),
+      axis.title.x = element_text(size=19,face = 'bold'),
+      axis.text.x = element_text(size = 19, face = 'bold'),
+      axis.title.y = element_text(size=23,face = 'bold'),
+      axis.text.y = element_text(size = 19, face = 'bold'),
+      axis.ticks.y=element_blank(),
+      strip.text = element_text(size = 18,face = 'bold', colour = "black"))+
+    guides(fill = guide_colourbar(title.position="top", title.hjust = 0.5, barwidth = 21, barheight = 1.9),
+           size = guide_legend(title.position="top", title.hjust = 0.5))+
+    coord_sf(xlim = c(-13, 42), ylim = c(36, 71), expand = TRUE)
 
 
 ############ plot temporal uncertainty weighted mean ############
