@@ -202,8 +202,8 @@ scaled_data <- NAT_DIS_PLOT_POP_COMP_ROU %>%
   mutate(across(everything(), scale)) %>%
   mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
 
-colnames(scaled_data) <- c("rIN","pop","dis","comp","rough")
-scaled_data <- scaled_data  %>% relocate("comp", .before = "rIN")
+colnames(scaled_data) <- c("N2K","pop","road","comp","rough")
+scaled_data <- scaled_data  %>% relocate("comp", .before = "N2K")
 
 scaled_data <- scaled_data  %>% cbind(x= NAT_DIS_PLOT_POP_COMP_ROU_auto$x, y=NAT_DIS_PLOT_POP_COMP_ROU_auto$y)
 
@@ -286,7 +286,7 @@ df <- df %>% dplyr::select(id, J)
 NAT_DIS_PLOT_POP_EV_ROU <- cbind(NAT_nPlot, pop=Vpop05, dis=Vdis, rough=Vrough) %>% inner_join(.,df, by="id") %>% drop_na()
 NAT_DIS_PLOT_POP_EV_ROU <- NAT_DIS_PLOT_POP_EV_ROU[,-1]
 
-NAT_DIS_PLOT_POP_EV_ROU_auto <- NAT_DIS_PLOT_POP_EV_ROU%>% dplyr::select(rIN, dis,pop, rough, J)
+NAT_DIS_PLOT_POP_EV_ROU_auto <- NAT_DIS_PLOT_POP_EV_ROU%>% dplyr::select(rIN, dis, pop, rough, J)
 
 
 scaled_data <- NAT_DIS_PLOT_POP_EV_ROU_auto %>%
@@ -294,7 +294,7 @@ scaled_data <- NAT_DIS_PLOT_POP_EV_ROU_auto %>%
   mutate(across(everything(), function(x) (x - min(x)) / (max(x) - min(x))))
 
 scaled_data <- scaled_data  %>% relocate("J", .before = "rIN")
-colnames(scaled_data)<- c("J","rIN","dis","pop","rough")
+colnames(scaled_data)<- c("J","N2K","road","pop","rough")
 scaled_data <- scaled_data %>% cbind(x=NAT_DIS_PLOT_POP_EV_ROU$x, y=NAT_DIS_PLOT_POP_EV_ROU$y)
 EV <- 1
 pred_cols <- 2:5
@@ -378,7 +378,7 @@ scaled_data <- scaled_data  %>% relocate("nni.ses", .before = "rIN")
 
 scaled_data <- scaled_data  %>% cbind(x= NAT_DIS_PLOT_POP_NNI_ROU_auto$x, y=NAT_DIS_PLOT_POP_NNI_ROU_auto$y)
 
-colnames(scaled_data) <- c("nni","rIN", "pop","dis","rough", "x", "y")
+colnames(scaled_data) <- c("nni","N2K", "pop","road","rough", "x", "y")
 
 NNI <- 1
 pred_cols <- 2:5
@@ -414,6 +414,9 @@ p2 <- draw(ModelCOMP, select = "s(rough)")
 
 pcom <- p1 + p2 + plot_layout(ncol = 2)
 
-Pnni <- draw(ModelNNI, select= "s(N2K)")
+p1 <- draw(ModelNNI, select = "s(N2K)")
+p2 <- draw(ModelNNI, select = "s(rough)")
+
+Pnni <- p1 + p2 + plot_layout(ncol = 2)
 
 ptot <- pcom + pEv+Pnni + plot_layout(nrow=3)
