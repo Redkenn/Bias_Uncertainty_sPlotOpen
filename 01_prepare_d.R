@@ -46,5 +46,5 @@ d<- cbind(OV, d)
 
 saveRDS(d, "d.rds")
 
-hex_grif_sf <- st_as_sf(hex_grid)
-hex_grif_sf$id <- 1:131040
+hex_grid_sf <- st_as_sf(hex_grid)
+hex_grid_sf$id <- 1:131040
