@@ -44,4 +44,5 @@ OV<- as.data.frame(over(dCoord, hex_grid))
 colnames(OV) <- "id"
 d<- cbind(OV, d)
 
-
+hex_grif_sf <- st_as_sf(hex_grid)
+hex_grif_sf$id <- 1:131040
