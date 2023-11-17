@@ -25,26 +25,21 @@ d <- d %>% filter(Year >= 1992)
 
 # adding id values of grids with 0.5 degree of spatial resolution
 
-Europe <- ne_countries(continent = "Europe", returnclass = "sp")
-bbox <- st_bbox(Europe)
-polygon <- st_as_sfc(bbox)
-
-#hexabin
-size<- 0.5
-
-
-polygon.sp<- as(polygon, "Spatial")
-hex_points <- spsample(polygon.sp, type = "hexagonal", cellsize= size)
-hex_grid <- HexPoints2SpatialPolygons(hex_points, dx = size)
+x <- raster()
+e <- extent( -180, 180, -90, 90)
+r<-raster::crop(x, e)
+r <- disaggregate(r, fact=2)
+vals <- 1:ncell(r)
+r <- setValues(r, vals)
+r
+r.sp <- as(r, "SpatialPolygonsDataFrame")
+crs(r.sp) <- "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 
 dCoord <- d%>% dplyr::select(Longitude, Latitude, PlotObservationID)
 coordinates(dCoord)= ~Longitude+Latitude
-crs(dCoord)<-  "+proj=longlat +datum=WGS84 +no_defs "
-OV<- as.data.frame(over(dCoord, hex_grid))
+crs(dCoord)<-  "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
+OV<- over(dCoord, r.sp)
 colnames(OV) <- "id"
 d<- cbind(OV, d)
+write_rds(d,"E:/Dottorato2/sPlot/d.rds")
 
-saveRDS(d, "d.rds")
-
-hex_grid_sf <- st_as_sf(hex_grid)
-hex_grid_sf$id <- 1:131040
