@@ -156,7 +156,7 @@ GGstack_TU$variable <- factor(GGstack_TU$variable, levels = c("z=-1", "z=-1/5", 
 s1<- GGstack_TU %>%
   ggplot() +
   geom_sf(data=world,
-          colour = "black", fill = "transparent", size=0.3)+
+          colour = "black", fill = "lightgray", size=0.3)+
   geom_tile(aes(x = x, y = y, fill = value)) +
   facet_wrap(~ variable, nrow = 1) + 
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7, limits=c(0, 1.0000000))+
