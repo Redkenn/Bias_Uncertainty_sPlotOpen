@@ -405,15 +405,19 @@ moran
 ############# DRAW PANNEL #############
 
 p3 <- draw(ModelCOMP, select = "s(N2K)")
+p3 <- p3 + theme_minimal()
 p4 <- draw(ModelCOMP, select = "s(rough)")
+p4 <- p4 + theme_minimal()
 
-
-
-P5 <- draw(ModelNNI, select= "s(N2K)")
+p5 <- draw(ModelNNI, select= "s(N2K)")
+p5 <- p5 + theme_minimal()
 p6 <- draw(ModelNNI, select = "s(rough)")
+p6 <- p6 + theme_minimal()
 
 p1 <- draw(ModelEV, select = "s(N2K)")
+p1 <- p1 + theme_minimal()
 p2 <- draw(ModelEV, select = "s(road)")
+p2 <- p2 + theme_minimal()
 
-ptot <- p3 + p4 + P5 + p6 + p1 + p2 + theme_void() + plot_layout(ncol = 6)
+ptot <- p3 + p4 + p5 + p6 + p1 + p2 + plot_layout(ncol = 6)
 ptot
