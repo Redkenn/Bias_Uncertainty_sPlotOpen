@@ -84,11 +84,11 @@ nPlotr_sp <- as(nPlotr,'SpatialPolygonsDataFrame')
 nPlotr_sp %>% 
   st_as_sf () %>%  
   ggplot()+
-  geom_sf(aes(fill =log10(nPlot)))+
   geom_sf(data=world,
-          colour = "black", fill = "transparent")+
+          colour = "black", fill = "lightgray")+
+  geom_sf(aes(fill =log10(nPlot)))+
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
-  coord_sf(xlim = c(-20, 51), ylim = c(30, 71), expand = TRUE)+
+   coord_sf(xlim = c(-13, 42), ylim = c(36, 71), expand = TRUE))+
   labs(title = "Number of plots", x="Longitude", y="Latitude", fill = "log10 Plots") +theme_light()+
   theme(legend.background=element_blank(),
         panel.grid = element_blank(),
@@ -104,6 +104,8 @@ nPlotr_sp %>%
         strip.text = element_text(size=12),
         legend.text = element_text(size=12,angle = 0), 
         legend.key.size = unit(0.8, 'cm'))   ->plot
+
+
 
 write_rds(plot, "nPlotr_sp.rds")
 
@@ -153,10 +155,10 @@ GGstack_TU$variable <- factor(GGstack_TU$variable, levels = c("z=-1", "z=-1/5", 
 
 s1<- GGstack_TU %>%
   ggplot() +
+  geom_sf(data=world,
+          colour = "black", fill = "transparent", size=0.3)+
   geom_tile(aes(x = x, y = y, fill = value)) +
   facet_wrap(~ variable, nrow = 1) + 
-  geom_sf(data=world,
-          colour = "black", fill = "transparent", size=0.3)+  
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7, limits=c(0, 1.0000000))+
   labs(x="Longitude",y="Latitude", fill="Uncertainty (median)")+
   theme_light()+
