@@ -68,10 +68,10 @@ spNat  %>%
   st_as_sf () %>%  
   ggplot()+
 geom_sf(data=world,
-          colour = "black", fill = "lightgray")+
+          colour = "black", fill = "ligthgray")+
 geom_sf(aes(fill =rIN))+
   scale_fill_viridis(option='viridis',direction = 1,alpha = 0.7)+
-  coord_sf(xlim = c(-20, 51), ylim = c(30, 71), expand = TRUE)+
+   coord_sf(xlim = c(-13, 42), ylim = c(36, 71), expand = TRUE))+
   labs(title = "Relative number of plots in Natura 2000 network", x="Longitude", y="Latitude", fill = " r/n Plots") +theme_light()+
   theme(legend.background=element_blank(),
         panel.grid = element_blank(),
