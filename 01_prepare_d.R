@@ -41,5 +41,4 @@ crs(dCoord)<-  "+proj=longlat +ellps=WGS84 +towgs84=0,0,0,0,0,0,0 +no_defs "
 OV<- over(dCoord, r.sp)
 colnames(OV) <- "id"
 d<- cbind(OV, d)
-write_rds(d,"E:/Dottorato2/sPlot/d.rds")
 
