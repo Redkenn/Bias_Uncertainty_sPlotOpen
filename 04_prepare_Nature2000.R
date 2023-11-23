@@ -42,15 +42,23 @@ r
 df.r <- as.data.frame(r, xy=TRUE)
 colnames(df.r)<- c("x","y","id")
 
+# number of plots inside pretected areas per grid cell
+
 DFinS <- df.ov_plotNat %>% filter(In_Out %in% 1) %>% group_by(id)  %>%
   mutate(countIN= sum(In_Out)) %>%
   ungroup() 
 
-nNat2 <- DFinS %>% inner_join(., df.r, by="id") 
+# centroids of the grid cells
+
+nNat2 <- DFinS %>% inner_join(., df.r, by="id")
+
+# number of plots per grid cell
 
 nPlot <- d %>% dplyr::select(id, PlotObservationID)%>% unique()%>% group_by(id) %>%
   mutate(nPlot = n()) %>%
   ungroup() %>% dplyr::select(id, nPlot)
+
+# relative number of plots inside protected areas per grid cell
 
 nNat2 <- nNat2@data %>% inner_join(., nPlot, by="id") %>% mutate(rIN = countIN/nPlot) %>% dplyr::select(id, rIN) %>% unique()
 
@@ -87,13 +95,3 @@ geom_sf(aes(fill =rIN))+
         strip.text = element_text(size=12),
         legend.text = element_text(size=12,angle = 0), 
         legend.key.size = unit(0.8, 'cm'))   ->plot
-
-########## barplot per date
-
-d2 <- read.csv("d2.csv")
-
-d2$Year <- substr(d2$d.Date_of_recording, 1,4)
-d2 <- d2 %>% filter(Year >= 1992)
-d2.date <- d2%>%left_join(df.ov_plotNat, by = "d.PlotObservationID")%>% filter(In_Out %in% 1)
-d2.date <- d2.date%>% dplyr::select(Year,d.PlotObservationID)%>%unique()
-hist(as.numeric(d2.date$Year))
