@@ -148,9 +148,8 @@ NNI_COMP_EVssp %>%
    #annotation_custom(
    #ggplotGrob(tric$key),  xmin = -10, xmax = 20, ymin = 60, ymax )
 
-DA SETTARE IL CAZZO DI PANNELLO
-p <- grid.arrange(arrangeGrob(TRI, ncol=1, nrow=1),
-           arrangeGrob(tric$key, ncol=2, nrow=1), heights=c(2,1))
+#p <- grid.arrange(arrangeGrob(TRI, ncol=1, nrow=1),
+           #arrangeGrob(tric$key, ncol=2, nrow=1), heights=c(2,1))
 
 ggplot2::ggsave(TRI, filename= "TRI.png", width = 18, height = 7, dpi= 600)
  
