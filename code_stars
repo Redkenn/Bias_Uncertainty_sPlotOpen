@@ -1,0 +1,21 @@
+extent <-  sf::st_bbox(c(xmin = -180, xmax = 180, ymin = -90, ymax = 90),crs = 4326)
+# Set the resolution
+resolution <- 0.5
+ 
+# Create an empty stars object with 0.5 degree resolution
+raster <- st_as_stars(extent, dx = resolution, dy = resolution)
+ 
+# Get the number of cells
+num_cells <- prod(dim(raster))
+ 
+# Set values from 1 to the number of cells
+values <- seq_len(num_cells)
+
+# Set values to the stars object
+r.sp <- st_as_sf(raster)
+ 
+OV <- st_join(dCoord, r.sp)
+colnames(OV) <- "id"
+d <- cbind(OV, d)
+ 
+d <- drop_na(d)
